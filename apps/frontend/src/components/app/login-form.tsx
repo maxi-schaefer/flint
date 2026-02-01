@@ -1,0 +1,79 @@
+"use client";
+
+import { useState } from "react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../ui/card";
+import { AlertCircle, Loader2, Server } from "lucide-react";
+import { Label } from "../ui/label";
+import { Input } from "../ui/input";
+import { Button } from "../ui/button";
+import { useAuth } from "@/providers/AuthProvider";
+import { useRouter } from "next/navigation";
+
+export function LoginForm() {
+    const router = useRouter();
+    const [email, setEmail] = useState("");
+    const [password, setPassword] = useState("");
+    const [error, setError] = useState("");
+    const [isLoading, setIsLoading] = useState(false);
+    const { login } = useAuth();
+
+    async function handleSubmit(e: React.FormEvent) {
+        e.preventDefault();
+        setIsLoading(true);
+        setError("");
+
+        try {
+            await login(email, password);
+            router.push("/dashboard")
+        } catch (error) {
+            setError("Invalid email or password")
+        } finally {
+            setIsLoading(false);
+        }
+    }
+
+    return (
+        <div className="min-h-screen flex items-center justify-center p-4" style={{ backgroundImage: "url(/login.jpg)"}}>
+            <div className="absolute inset-0 bg-black/50"/>
+
+            <Card className="w-full max-w-md bg-background/85 backdrop-blur-sm">
+                <CardHeader className="text-center flex justify-center border-b mx-4">
+                    <div className="flex h-13 w-13 items-center justify-center rounded-xl bg-primary/10 border border-primary/20">
+                        <Server className="h-5 w-5 text-primary" />
+                    </div>
+                    <div className="flex flex-col items-start">
+                        <CardTitle className="text-2xl font-semibold text-foreground">Flint</CardTitle>
+                        <CardDescription className="text-muted-foreground">Minecraft Server Management</CardDescription>
+                    </div>
+                </CardHeader>
+
+                <CardContent>
+                    <form onSubmit={handleSubmit} className="space-y-4">
+                        {error && (
+                            <div className="flex items-center gap-2 p-3 text-sm text-destructive bg-destructive/10 border border-destructive/20 rounded-lg">
+                                <AlertCircle className="h-4 w-4" />
+                                {error}
+                            </div>
+                        )}
+
+                        <div className="space-y-2">
+                            <Label htmlFor="email" className="text-foreground">Email</Label>
+                            <Input id="email" type="email" placeholder="admin@flint.io" value={email} onChange={(e) => setEmail(e.target.value)} required className="bg-input border-border"/>
+                        </div>
+                        
+                        <div className="space-y-2">
+                            <Label htmlFor="password" className="text-foreground">Password</Label>
+                            <Input id="password" type="password" placeholder="••••••••" value={password} onChange={(e) => setPassword(e.target.value)} required className="bg-input border-border" />
+                        </div>
+
+                        <Button type="submit" className="w-full" disabled={isLoading}>
+                            {
+                                isLoading ? (<Loader2 className="h-4 w-4 animate-spin" />) : "Sign In"
+                            }
+                        </Button>
+                    </form>
+                </CardContent>
+            </Card>
+        </div>
+    )
+}

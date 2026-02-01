@@ -1,0 +1,15 @@
+{
+    "name": "flint",
+    "private": true,
+    "workspaces": [
+        "apps/*",
+        "packages/*"
+    ],
+  "scripts": {
+        "dev": "concurrently -n agent,backend,frontend -c cyan,green,blue \"npm run dev -w apps/agent\" \"npm run dev -w apps/backend\" \"npm run dev -w apps/frontend\"",
+        "build": "npm run build -ws"
+    },
+    "devDependencies": {
+        "concurrently": "^9.2.1"
+    }
+}

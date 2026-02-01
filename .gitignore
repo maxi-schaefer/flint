@@ -1,0 +1,8 @@
+/data
+/node_modules
+/package-lock.json
+/apps/agent/servers
+/apps/backend/.env
+/apps/frontend/.next
+/apps/frontend/node_modules
+/packages/protocol/dist
