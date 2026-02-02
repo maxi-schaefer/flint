@@ -1,14 +1,14 @@
-# Flint
+<img align="left" width="75" height="75" src="./assets/flint.png">
 
+# Flint
+Flint is a self-hosted Minecraft server management tool designed to make running and organizing your servers easier.
+> ⚠️ **Early Development**: Flint is in its very early stages. Expect breaking changes and limited functionality.
 
 ![](./assets/login.png)
 ![](./assets/console.jpeg)
 ![](./assets/creation.jpeg)
 ![](./assets/files.jpeg)
 
-Flint is a self-hosted Minecraft server management tool designed to make running and organizing your servers easier.
-
-> ⚠️ **Early Development**: Flint is in its very early stages. Expect breaking changes and limited functionality.
 
 ### Features (Planned):
 
