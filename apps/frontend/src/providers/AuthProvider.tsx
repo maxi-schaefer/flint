@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useEffect, useState } from "react";
 import api, { setAuthToken } from "@/lib/api";
+import { useRouter } from "next/navigation";
 
 type User = {
     id: string;
@@ -17,6 +18,7 @@ type AuthContextType = {
 const AuthContext = createContext<AuthContextType>(null!);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
+    const router = useRouter();
     const [user, setUser] = useState<User | null>(null);
 
     useEffect(() => {
@@ -36,6 +38,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         localStorage.removeItem("token");
         setAuthToken(null);
         setUser(null);
+
+        router.push("/");
     }
 
     return (

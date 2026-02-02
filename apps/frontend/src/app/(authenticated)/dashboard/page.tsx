@@ -10,6 +10,7 @@ import { cn } from "@/lib/utils";
 import { startServer, stopServer } from "@/services/server.service";
 import { MoreVertical, Play, RotateCcw, ServerIcon, Shield, ShieldOff, Square, Users } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 function getStatusColor(status: Server["status"]) {
   switch (status) {
@@ -40,6 +41,7 @@ function getStatusBadge(status: Server["status"]) {
 
 function DashboardPage() {
     const { servers } = useServerStore();
+    const router = useRouter();
 
     const handleStart = async (serverId: string) => {
         try {
@@ -100,15 +102,24 @@ function DashboardPage() {
 
             <div>
                 <h2 className="text-lg font-medium text-foreground mb-4">Your Servers</h2>
-                {servers.length === 0 && (<p className="font-mono text-muted-foreground">You dont have any servers yet!</p>)}
+                {servers.length === 0 && (
+                    <div className="text-center py-12 border border-dashed rounded-lg">
+                        <ServerIcon className="mx-auto h-8 w-8 text-muted-foreground mb-3" />
+                        <p className="text-sm font-medium">No servers yet</p>
+                        <p className="text-xs text-muted-foreground mb-4">
+                            Create your first Minecraft world in seconds
+                        </p>
+                        <Button size="sm" onClick={() => router.push("/create")}>Create Server</Button>
+                    </div>
+                )}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                     {servers.map((server) => (
-                        <Card key={server._id} className={"bg-card border-border transition-all hover:border-primary/50"}>
+                        <Card key={server._id}   className={cn("bg-card border-border transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg hover:border-primary/50")}>
                                 <CardContent className="p-4">
                                     <div className="flex items-start justify-between mb-4">
                                         <Link className="cursor-pointer" href={`/${server._id}`}>
                                         <div className="flex items-center gap-3">
-                                            <div className={cn("h-3 w-3 rounded-full", getStatusColor(server.status))} />
+                                            <div className={cn("h-3 w-3 rounded-full", getStatusColor(server.status), server.status === "running" && "animate-pulse")} />
 
                                             <div>
                                                 <h3 className="font-medium text-foreground">{server.name}</h3>
@@ -149,15 +160,22 @@ function DashboardPage() {
                                                     </Button>
                                                 </DropdownMenuTrigger>
                                                 <DropdownMenuContent align="end" className="bg-popover border-border">
-                                                    <DropdownMenuItem className="text-foreground" onClick={() => handleStart(server._id)}>
-                                                        <Play className="mr-2 h-4 w-4" /> Start
-                                                    </DropdownMenuItem>
-                                                    <DropdownMenuItem className="text-foreground" onClick={() => handleStop(server._id)}>
+                                                    {server.status !== "running" && (
+                                                        <DropdownMenuItem onClick={() => handleStart(server._id)}>
+                                                            <Play className="mr-2 h-4 w-4" /> Start
+                                                        </DropdownMenuItem>
+                                                    )}
+
+                                                    {server.status === "running" && (
+                                                    <>
+                                                        <DropdownMenuItem onClick={() => handleStop(server._id)}>
                                                         <Square className="mr-2 h-4 w-4" /> Stop
-                                                    </DropdownMenuItem>
-                                                    <DropdownMenuItem className="text-foreground">
+                                                        </DropdownMenuItem>
+                                                        <DropdownMenuItem>
                                                         <RotateCcw className="mr-2 h-4 w-4" /> Restart
-                                                    </DropdownMenuItem>
+                                                        </DropdownMenuItem>
+                                                    </>
+                                                    )}
                                                 </DropdownMenuContent>
                                             </DropdownMenu>
                                         </div>

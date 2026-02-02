@@ -10,16 +10,14 @@ import {
   TabsTrigger,
 } from "@/components/ui/tabs"
 import { useServerStore } from "@/context/ServerStoreContext"
-import { Server } from "@/lib/types"
-import { getServer } from "@/services/server.service"
 import {
+    AppWindow,
   Archive,
   FolderOpen,
   TerminalIcon,
   Users,
 } from "lucide-react"
 import { useParams } from "next/navigation"
-import { useEffect, useState } from "react"
 
 function ServerPage() {
   const { servers } = useServerStore();
@@ -37,7 +35,7 @@ function ServerPage() {
         <Tabs defaultValue="terminal" className="flex-1 flex flex-col">
             <TabsList className="mt-2 mx-auto">
                 <TabsTrigger value="terminal" className="gap-2">
-                    <TerminalIcon className="h-4 w-4" />
+                    <AppWindow className="h-4 w-4" />
                     Terminal
                 </TabsTrigger>
                 <TabsTrigger value="files" className="gap-2">

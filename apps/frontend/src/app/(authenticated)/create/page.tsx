@@ -205,6 +205,14 @@ function CreateServer() {
                                 </div>
                             </div>
 
+                            <div className="space-y-1 border-b pb-4 pt-6">
+                                <h3 className="text-sm font-medium text-foreground">Access & Security</h3>
+                                <p className="text-xs text-muted-foreground">
+                                    Control who can join your server
+                                </p>
+                            </div>
+
+
                             <div className="space-y-4 pt-2">
                                 <div className="flex items-center justify-between">
                                     <div>
@@ -227,14 +235,32 @@ function CreateServer() {
                                 </div>
                             </div>
 
-                            <div className="space-y-4">
-                                <div className='flex gap-2'>
-                                    <Checkbox id='accept-eula' checked={acceptEula} onCheckedChange={(value) => setAcceptEula(value as boolean)} />
-                                    <Label htmlFor='accept-eula' className='text-foreground'>Accept Eula?</Label>
+                            <div className="rounded-lg border border-border p-3 bg-muted/20">
+                                <div className="flex gap-2 items-center">
+                                    <Checkbox
+                                    id="accept-eula"
+                                    checked={acceptEula}
+                                    onCheckedChange={(value) => setAcceptEula(value as boolean)}
+                                    />
+                                    <Label htmlFor="accept-eula" className="text-sm leading-relaxed">
+                                    I agree to the Minecraft{" "}
+                                    <a
+                                        href="https://www.minecraft.net/eula"
+                                        target="_blank"
+                                        className="underline text-primary"
+                                    >
+                                        End User License Agreement
+                                    </a>
+                                    </Label>
                                 </div>
                             </div>
 
-                            <Button type='submit' className='w-full' disabled={isLoading || !acceptEula}>
+                           <Button
+                            type="submit"
+                            size="lg"
+                            className="w-full mt-4"
+                            disabled={isLoading || !acceptEula}
+                            >
                                 {isLoading ? <Loader2 className='h-4 w-4 animate-spin' /> : "Create Server"}
                             </Button>
                         </form>
