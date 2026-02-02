@@ -8,7 +8,7 @@ import { useServerStore } from "@/context/ServerStoreContext";
 import { Server } from "@/lib/types"
 import { cn } from "@/lib/utils";
 import { startServer, stopServer } from "@/services/server.service";
-import { MoreVertical, Play, RotateCcw, ServerIcon, Shield, ShieldOff, Square, Users } from "lucide-react";
+import { Cpu, MoreVertical, Play, RotateCcw, ServerIcon, Shield, ShieldOff, Square, Users } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
@@ -76,8 +76,8 @@ function DashboardPage() {
                                     {servers.length}
                                 </p>
                             </div>
-                            <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                                <ServerIcon className="h-5 w-5 text-primary" />
+                            <div className="h-10 w-10 rounded-lg bg-muted-foreground/10 flex items-center justify-center">
+                                <ServerIcon className="h-5 w-5 text-muted-foreground" />
                             </div>
                         </div>
                     </CardContent>
@@ -94,6 +94,24 @@ function DashboardPage() {
                             </div>
                             <div className="h-10 w-10 rounded-lg bg-success/10 flex items-center justify-center">
                                 <ServerIcon className="h-5 w-5 text-success" />
+                            </div>
+                        </div>
+                    </CardContent>
+                </Card>
+
+                <Card className="bg-card border-border">
+                    <CardContent className="p-4">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <p className="text-sm text-muted-foreground">Avg CPU Usage</p>
+                                <p className="text-2xl font-semibold text-foreground">
+                                    {Math.round(
+                                            servers.reduce((acc, s) => acc + (s.cpuUsage || 0), 0) / servers.filter((s) => s.status === "running").length || 0
+                                    )} %
+                                </p>
+                            </div>
+                            <div className="h-10 w-10 rounded-lg bg-chart-3/10 flex items-center justify-center">
+                                <Cpu className="h-5 w-5 text-chart-3" />
                             </div>
                         </div>
                     </CardContent>
