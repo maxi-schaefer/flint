@@ -11,136 +11,124 @@ interface RunningServer {
     server: ManagedServer;
     logs: LogBuffer;
     files: FileManager;
-};
+}
 
 export class ServerProcessManager extends EventEmitter {
     private servers = new Map<string, RunningServer>();
+    private fileManagers = new Map<string, FileManager>();
+    private serverPaths = new Map<string, string>(); // store path for offline servers
 
     constructor() {
         super();
     }
 
     /**
-     * Start Server Process function
-     * @param server The server which should be started. 
+     * Register server path for offline access
      */
-    start (server: ManagedServer) {
-        console.log(server);
+    registerServerPath(id: string, serverPath: string) {
+        this.serverPaths.set(id, serverPath);
+        if (!this.fileManagers.has(id)) {
+        this.fileManagers.set(id, new FileManager(serverPath));
+        }
+    }
 
-        if(this.servers.has(server.id)) {
-            throw new Error("Server already running");
+    /**
+     * Start Server Process
+     */
+    start(server: ManagedServer) {
+        if (this.servers.has(server.id)) {
+        throw new Error("Server already running");
         }
 
         const jarPath = path.join(server.path, server.jar);
-
-        if(!fs.existsSync(jarPath)) {
-            throw new Error(`Server jar not found: ${jarPath}`);
-        }
+        if (!fs.existsSync(jarPath)) throw new Error(`Server jar not found: ${jarPath}`);
 
         console.log(`[agent] Starting server "${server.name}"`);
 
         const proc = spawn(
-            "java",
-            [
-                `-Xms${server.minMemoryMb}M`,
-                `-Xmx${server.maxMemoryMb}M`,
-                "-jar",
-                server.jar,
-                "nogui"
-            ],
-            {
-                cwd: server.path
-            }
+        "java",
+        [`-Xms${server.minMemoryMb}M`, `-Xmx${server.maxMemoryMb}M`, "-jar", server.jar, "nogui"],
+        { cwd: server.path }
         );
 
         const logs = new LogBuffer(500);
-        const files = new FileManager(server.path);
+        const files = this.getFileManager(server.id, server.path);
 
         proc.stdout.on("data", (data) => {
-            const line = data.toString();
-            logs.push(line);
-            this.emit("log", server.id, line);
+        const line = data.toString();
+        logs.push(line);
+        this.emit("log", server.id, line);
         });
-        
+
         proc.stderr.on("data", (data) => {
-            const line = data.toString();
-            logs.push(line);
-            this.emit("log", server.id, line);
+        const line = data.toString();
+        logs.push(line);
+        this.emit("log", server.id, line);
         });
 
         proc.on("exit", (code) => {
-            logs.push(`[agent] Server exited with code ${code}`);
-            this.emit("status", server.id, "stopped");
-            this.servers.delete(server.id);
+        logs.push(`[agent] Server exited with code ${code}`);
+        this.emit("status", server.id, "stopped");
+        this.servers.delete(server.id);
         });
 
         this.servers.set(server.id, { process: proc, server, logs, files });
+        this.registerServerPath(server.id, server.path); // ensure offline file access
         this.emit("status", server.id, "running");
     }
 
-    /**
-     * Stop Server process function
-     * @param serverId The id of the server which should be stopped
-     */
-    stop (serverId: string) {
+    stop(serverId: string) {
         const running = this.servers.get(serverId);
-        if(!running) {
-            throw new Error("Server not running");
-        }
-
-        console.log(`[agent] Stopping server "${running.server.name}`);
-        
+        if (!running) throw new Error("Server not running");
         running.process.stdin.write("stop\n");
     }
 
-    /**
-     * List Running servers function
-     * @returns An Array of all running servers with their id, name and pid
-     */
-    listRunning() {
-        return Array.from(this.servers.values()).map((s) => ({
-            id: s.server.id,
-            name: s.server.name,
-            pid: s.process.pid
-        }));
-    }
-
-    /**
-     * Send Command to server function
-     * @param serverId The ID of the server which will execute the command
-     * @param command The command which will be executed on the minecraft server
-     */
-    sendCommand (serverId: string, command: string) {
+    sendCommand(serverId: string, command: string) {
         const running = this.servers.get(serverId);
-
-        if(!running) {
-            throw new Error("Server not running");
-        }
-
+        if (!running) throw new Error("Server not running");
         running.process.stdin.write(command.trim() + "\n");
     }
 
     getLogs(serverId: string): string[] {
         const running = this.servers.get(serverId);
-        if(!running) throw new Error("Server not running");
+        if (!running) throw new Error("Server not running");
         return running.logs.getLines();
     }
 
-    listFiles(serverId: string, relPath: string) {
-        const running = this.servers.get(serverId);
-        if(!running) throw new Error("Server not running");
-        return running.files.list(relPath);
+    /**
+     * Get FileManager by server ID (creates for offline server if needed)
+     */
+    private getFileManager(serverId: string, serverPath?: string) {
+        if (!this.fileManagers.has(serverId)) {
+        if (!serverPath && !this.serverPaths.has(serverId)) {
+            throw new Error(`No path registered for server ${serverId}`);
+        }
+        const pathToUse = serverPath ?? this.serverPaths.get(serverId)!;
+        this.fileManagers.set(serverId, new FileManager(pathToUse));
+        }
+        return this.fileManagers.get(serverId)!;
     }
-    
+
+    listFiles(serverId: string, relPath = ".") {
+        const fm = this.getFileManager(serverId);
+        return fm.list(relPath);
+    }
+
     readFile(serverId: string, relPath: string) {
-        const running = this.servers.get(serverId)
-        if(!running) throw new Error("Server not running");
-        return running.files.readFile(relPath);
+        const fm = this.getFileManager(serverId);
+        return fm.readFile(relPath);
     }
-    
+
     writeFile(serverId: string, relPath: string, content: string) {
-        const running = this.servers.get(serverId)
-        if(!running) throw new Error("Server not running");
-        running.files.writeFile(relPath, content);
+        const fm = this.getFileManager(serverId);
+        return fm.writeFile(relPath, content);
+    }
+
+    listRunning() {
+        return Array.from(this.servers.values()).map((s) => ({
+        id: s.server.id,
+        name: s.server.name,
+        pid: s.process.pid,
+        }));
     }
 }

@@ -1,14 +1,16 @@
 "use client";
 
 import { FileItem, Server } from '@/lib/types';
-import { ChevronRight, File, FileCode, FileText, FolderOpen, FolderPlus, Home, RefreshCw, Search, Settings, Upload } from 'lucide-react'
+import { ChevronRight, File, FileCode, FileText, FolderOpen, FolderPlus, Home, RefreshCw, Save, Search, Settings, Upload, X } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { Button } from '../ui/button';
 import { Card, CardContent, CardHeader } from '../ui/card';
 import { cn } from '@/lib/utils';
-import { getFiles } from '@/services/server.service';
+import { getFiles, readFile, writeFile } from '@/services/server.service';
 import { Input } from '../ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../ui/table';
+import { Badge } from '../ui/badge';
+import { Textarea } from '../ui/textarea';
 
 function getFileIcon(name: string) {
     const ext = name.split(".").pop()?.toLowerCase()
@@ -24,24 +26,51 @@ function getFileIcon(name: string) {
     return <File className="h-4 w-4 text-muted-foreground" />
 }
 
+
+const ROOT_PATH = ".";
+
+function normalizePath(path?: string) {
+    if (!path || path === "/" || path === "") return ROOT_PATH;
+    return path;
+}
+
+function joinPath(base: string, next: string) {
+    if (base === ROOT_PATH) return `${ROOT_PATH}/${next}`;
+    return `${base}/${next}`;
+}
+
+function parentPath(path: string) {
+    if (path === ROOT_PATH) return ROOT_PATH;
+
+    const parts = path.replace(/^\.\//, "").split("/");
+    parts.pop();
+
+    return parts.length === 0 ? ROOT_PATH : `${ROOT_PATH}/${parts.join("/")}`;
+}
+
 function FileBrowser({ server }: { server: Server }) {
     const [files, setFiles] = useState<FileItem[]>([]);
     const [searchQuery, setSearchQuery] = useState("");
-    const [currentPath, setCurrentPath] = useState("");
+    const [currentPath, setCurrentPath] = useState<string>(ROOT_PATH);
+    const [isEditorOpen, setIsEditorOpen] = useState(false);
+    const [editingContent, setEditingContent] = useState("");
+    const [selectedFile, setSelectedFile] = useState<FileItem | null>(null)
 
-    const fetchFiles = async () => {
+    const fetchFiles = async (path?: string) => {
         try {
-            const f = await getFiles(server._id);
-            console.log(f);
+            const f = await getFiles(server._id, path);
             setFiles(f);
         } catch (error) {} // error = server offline (TODO: fix in future)
     }
 
     useEffect(() => {
-        fetchFiles();
+        fetchFiles(ROOT_PATH);
     }, [])
 
-    const pathParts = currentPath.split("/").filter(Boolean);
+    const pathParts =
+    currentPath === ROOT_PATH
+        ? []
+        : currentPath.replace(/^\.\//, "").split("/");
 
     const filteredFiles = files
         .filter(
@@ -55,14 +84,97 @@ function FileBrowser({ server }: { server: Server }) {
         });
 
     const handleNavigate = (path: string) => {
-        setCurrentPath(path)
-        setSearchQuery("")
+        const normalized = normalizePath(path);
+        fetchFiles(normalized);
+        setCurrentPath(normalized);
+        setSearchQuery("");
+    };
+
+    const handleFileClick = async (file: FileItem) => {
+        if (file.isDirectory) {
+            const nextPath = joinPath(currentPath, file.name);
+            handleNavigate(nextPath);
+        } else {
+            const c = await readFile(server._id, file.path);
+            setEditingContent(c)
+            setIsEditorOpen(true)
+            setSelectedFile(file);
+        }
+    };
+
+    const handleSaveFile = async (file: FileItem) => {
+        await writeFile(server._id, file.path, editingContent);
+
+        setIsEditorOpen(false);
+        setSelectedFile(null);
+        setEditingContent("");
+    }
+
+    const formatFileSize = (bytes: number): string => {
+        if (bytes < 1024) return `${bytes} B`
+        if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
+        return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
     }
     
     if (!server) {
         return (
             <div className="p-6 flex items-center justify-center h-full">
                 <p className="text-muted-foreground">Server not found</p>
+            </div>
+        )
+    }
+
+    if(isEditorOpen && selectedFile) {
+        return (
+            <div className="p-6 space-y-4 h-full flex flex-col">
+                <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => {
+                                setIsEditorOpen(false)
+                                setSelectedFile(null)
+                                setEditingContent("")
+                            }}
+                            className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                            >
+                            <X className="h-4 w-4" />
+                        </Button>
+                        <div>
+                            <div className="flex items-center gap-2">
+                                {getFileIcon(selectedFile.name)}
+                                <h1 className="text-xl font-semibold text-foreground">{selectedFile.name}</h1>
+                            </div>
+                            <p className="text-sm text-muted-foreground">{currentPath}/{selectedFile.name}</p>
+                        </div>
+                    </div>
+                    <Button className="bg-primary text-primary-foreground hover:bg-primary/90" onClick={() => handleSaveFile(selectedFile)}>
+                        <Save className="mr-2 h-4 w-4" /> Save
+                    </Button>
+                </div>
+
+                <Card className='flex-1 flex flex-col bg-card border-border overflow-hidden'>
+                    <CardHeader className='py-3 px-4 border-b border-border'>
+                        <div className="flex items-center justify-between">
+                            <Badge variant="outline" className="text-xs border-border text-muted-foreground">
+                                {selectedFile.name.split(".").pop()?.toUpperCase()}
+                            </Badge>
+                            <span className="text-sm text-muted-foreground">{formatFileSize(parseInt(selectedFile.size!))}</span>
+                        </div>
+                        <span className="text-xs text-muted-foreground">Last modified: {new Date(selectedFile.modified).toLocaleString()}</span>
+                    </CardHeader>
+
+                    <CardContent className="flex-1 p-0 overflow-hidden">
+                        <Textarea
+                            spellCheck={false}
+                            value={editingContent}
+                            onChange={(e) => setEditingContent(e.target.value)}
+                            className="w-full h-full min-h-full resize-none border-0 rounded-none bg-background/50 font-mono text-sm text-foreground focus-visible:ring-0 p-4"
+                            placeholder="File contents..."
+                        />
+                    </CardContent>
+                </Card>
             </div>
         )
     }
@@ -86,7 +198,7 @@ function FileBrowser({ server }: { server: Server }) {
                 <CardHeader className='py-3 px-4 border-b border-border'>
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2 text-sm">
-                            <Button variant={"ghost"} size={"icon"} className='h-7 w-7 text-muted-foreground hover:text-foreground' onClick={() => handleNavigate("/")}>
+                            <Button variant={"ghost"} size={"icon"} className='h-7 w-7 text-muted-foreground hover:text-foreground' onClick={() => handleNavigate(ROOT_PATH)}>
                                 <Home className='h-4 w-4' />
                             </Button>
 
@@ -122,14 +234,14 @@ function FileBrowser({ server }: { server: Server }) {
                         <div className="flex items-center gap-2">
                             <div className="relative">
                                 <Search className='absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground' />
-                                <Input value={searchQuery} onChange={(e) => setSearchQuery(e.target.validationMessage)} placeholder='Search files...' className="pl-9 h-8 w-48 bg-input border-border text-foreground text-sm"/>
+                                <Input value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder='Search files...' className="pl-9 h-8 w-48 bg-input border-border text-foreground text-sm"/>
                             </div>
 
                             <Button
                                 variant="ghost"
                                 size="icon"
                                 className="h-8 w-8 text-muted-foreground hover:text-foreground"
-                                onClick={fetchFiles}
+                                onClick={() => fetchFiles(currentPath)}
                             >
                                 <RefreshCw className="h-4 w-4" />
                             </Button>
@@ -149,8 +261,8 @@ function FileBrowser({ server }: { server: Server }) {
                         </TableHeader>
 
                         <TableBody>
-                            {currentPath !== "/" && (
-                                <TableRow className='border-border cursor-pointer hover:bg-accent/50' onClick={() => handleNavigate("/" + pathParts.slice(0, -1).join("/") || "/")}>
+                            {currentPath !== ROOT_PATH && (
+                                <TableRow className='border-border cursor-pointer hover:bg-accent/50' onClick={() => handleNavigate(parentPath(currentPath))}>
                                     <TableCell className='text-foreground'>
                                         <div className="flex items-center gap-3">
                                             <FolderOpen className='h-4 w-4 text-primary' />
@@ -163,7 +275,7 @@ function FileBrowser({ server }: { server: Server }) {
                                 </TableRow>
                             )}
                             {filteredFiles.map((file) => (
-                                <TableRow key={file.name} className='border-border cursor-pointer hover:bg-accent/50'>
+                                <TableRow onClick={() => handleFileClick(file)} key={file.name} className='border-border cursor-pointer hover:bg-accent/50'>
                                     <TableCell className='text-foreground'>
                                         <div className="flex items-center gap-3">
                                             {file.isDirectory ? (
@@ -175,7 +287,7 @@ function FileBrowser({ server }: { server: Server }) {
                                         </div>
                                     </TableCell>
                                     <TableCell className="text-muted-foreground">
-                                        {file.size || "-"} MB
+                                        {file.size ? formatFileSize(parseInt(file.size)) : "-"}
                                     </TableCell>
                                     <TableCell className="text-muted-foreground">
                                         {new Date(file.modified).toLocaleString()}

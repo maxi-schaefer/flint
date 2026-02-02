@@ -59,8 +59,14 @@ white-list=${whitelist}
             `.trim();
 
             fs.writeFileSync(path.join(serverPath, "server.properties"), props);
+
+            manager.registerServerPath(id, serverPath);
             return { ok: true }
-            
+
+        case "registerServerPath":
+            manager.registerServerPath(msg.payload.id, msg.payload.path);
+            return { ok: true }
+
         default:
             throw new Error(`Unkown command: ${msg.type}`)
     }

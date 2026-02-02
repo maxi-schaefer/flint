@@ -6,6 +6,7 @@ import authRoute from "./modules/auth/auth.routes";
 import cors from 'cors';
 import { requireAuth } from "./middleware/auth.middleware";
 import { bootstrapAdmin } from "./modules/auth/auth.bootstrap";
+import { bootstrapAgent } from "./bootstrapAgent";
 
 // Express App setup
 const app = express();
@@ -23,6 +24,7 @@ async function start() {
     await connectDB();
 
     await bootstrapAdmin();
+    await bootstrapAgent();
 
     app.listen(8080, () => {
         console.log("Backend listening on 8080");

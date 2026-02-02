@@ -75,7 +75,16 @@ export async function createServer(body: CreateServerReq) {
     return mapServer(data);
 }
 
-export async function getFiles(id: string): Promise<FileItem[]> {
-    const { data } = await api.get(`/servers/${id}/files`);
+export async function getFiles(id: string, path?: string): Promise<FileItem[]> {
+    const { data } = await api.get(`/servers/${id}/files${path ? "?path=" + path : ""}`);
     return data.files;
+}
+
+export async function readFile(id: string, file: string) {
+    const { data } = await api.get(`/servers/${id}/file?path=${file}`);
+    return data.content;
+}
+
+export async function writeFile(id: string, path: string, content: string) {
+    await api.post(`/servers/${id}/file`, { content, path });
 }

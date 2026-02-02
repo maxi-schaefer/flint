@@ -15,6 +15,8 @@ import { Input } from "../ui/input";
 export function Terminal({ server }: { server: Server }) {
   const { servers, appendServerLog, updateServer } = useServerStore();
   const [command, setCommand] = useState("");
+  const [commandHistory, setCommandHistory] = useState<string[]>([]);
+  const [historyIndex, setHistoryIndex] = useState(-1)
   const terminalRef = useRef<HTMLDivElement>(null);
 
   // Get the current server from context
@@ -50,11 +52,35 @@ export function Terminal({ server }: { server: Server }) {
     // Add command to logs immediately
     appendServerLog(server._id, `[${timestamp}] [Server thread/INFO]: Executing command: ${command}\n`);
 
-    await sendCommand(server._id, command);
+    setCommandHistory((prev) => [...prev, command])
+    setHistoryIndex(-1)
     setCommand("");
+
+    await sendCommand(server._id, command);
   };
 
   const clearTerminal = () => updateServer({ _id: server._id, logs: [] });
+  
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "ArrowUp") {
+      e.preventDefault()
+      if (historyIndex < commandHistory.length - 1) {
+        const newIndex = historyIndex + 1
+        setHistoryIndex(newIndex)
+        setCommand(commandHistory[commandHistory.length - 1 - newIndex])
+      }
+    } else if (e.key === "ArrowDown") {
+      e.preventDefault()
+      if (historyIndex > 0) {
+        const newIndex = historyIndex - 1
+        setHistoryIndex(newIndex)
+        setCommand(commandHistory[commandHistory.length - 1 - newIndex])
+      } else {
+        setHistoryIndex(-1)
+        setCommand("")
+      }
+    }
+  }
 
   const downloadLogs = () => {
     const blob = new Blob([currentServer?.logs?.join("\n") ?? ""], { type: "text/plain" });
@@ -155,6 +181,7 @@ export function Terminal({ server }: { server: Server }) {
             <Input
               value={command}
               onChange={(e) => setCommand(e.target.value)}
+              onKeyDown={handleKeyDown}
               placeholder="Enter command..."
               className="flex-1 bg-transparent border-0 focus-visible:ring-0 font-mono text-sm text-foreground placeholder:text-muted-foreground"
               disabled={server.status !== "running"}
