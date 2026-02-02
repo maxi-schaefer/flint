@@ -21,6 +21,13 @@ manager.on("status", (id, status) => {
     })
 });
 
+manager.on("stats", (payload) => {
+    broadcast({
+        type: "stats",
+        payload
+    });
+})
+
 /**
  * Websocket broadcast function
  * @param msg A message Object

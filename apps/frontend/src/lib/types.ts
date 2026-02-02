@@ -13,6 +13,8 @@ export interface Server {
   updatedAt: string
   status: "running" | "stopped" | "starting" | "crashed"
   logs?: string[]  // <-- add optional logs array
+  cpuUsage?: number
+  memoryUsageMb?: number
 }
 
 export interface FileItem {

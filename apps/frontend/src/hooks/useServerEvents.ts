@@ -13,7 +13,12 @@ export type ServerEvent =
       type: "status";
       payload: { id: string; status: Server["status"] };
       event: true;
-    };
+    }
+  | {
+      type: "stats",
+      payload: { id: string, cpu: number, memoryMb: number },
+      event: true
+    }
 
 export function useServerEvents(
   serverId: string,

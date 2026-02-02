@@ -55,6 +55,10 @@ export function ServerStoreProvider({ children }: { children: React.ReactNode })
       case "log":
         appendServerLog(msg.payload.id, msg.payload.line);
         break;
+
+      case "stats":
+        updateServer({ _id: msg.payload.id, cpuUsage: msg.payload.cpu, memoryUsageMb: msg.payload.memoryMb });
+        break;
     }
   });
 

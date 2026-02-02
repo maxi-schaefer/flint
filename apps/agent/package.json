@@ -6,10 +6,12 @@
     "build": "tsc"
   },
   "dependencies": {
-    "ws": "^8.19.0",
-    "@flint/protocol": "*"
+    "@flint/protocol": "*",
+    "pidusage": "^4.0.1",
+    "ws": "^8.19.0"
   },
   "devDependencies": {
+    "@types/pidusage": "^2.0.5",
     "@types/ws": "^8.18.1",
     "ts-node-dev": "^2.0.0",
     "typescript": "^5.3.3"

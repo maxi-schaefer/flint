@@ -191,6 +191,26 @@ function DashboardPage() {
                                                 0/{server.maxPlayers}
                                             </p>
                                         </div>
+                                        
+                                        <div>
+                                            <div className="flex items-center gap-1.5 text-muted-foreground mb-1">
+                                                <Users className="h-3.5 w-3.5" />
+                                                <span className="text-xs">Memory</span>
+                                            </div>
+                                            <p className="font-medium text-foreground">
+                                                {server.memoryUsageMb || "0"}/{server.maxMemoryMb} MB
+                                            </p>
+                                        </div>
+                                        
+                                        <div>
+                                            <div className="flex items-center gap-1.5 text-muted-foreground mb-1">
+                                                <Users className="h-3.5 w-3.5" />
+                                                <span className="text-xs">CPU</span>
+                                            </div>
+                                            <p className="font-medium text-foreground">
+                                                {server.cpuUsage || "0"} %
+                                            </p>
+                                        </div>
                                     </div>
                             </CardContent>
                         </Card>

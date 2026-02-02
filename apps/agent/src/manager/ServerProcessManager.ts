@@ -5,21 +5,49 @@ import { ManagedServer } from "../types";
 import { spawn, ChildProcessWithoutNullStreams } from "child_process";
 import { LogBuffer } from "../logs/LogBuffer";
 import { FileManager } from "../fs/FileManager";
+import pidusage from "pidusage";
 
 interface RunningServer {
     process: ChildProcessWithoutNullStreams;
     server: ManagedServer;
     logs: LogBuffer;
     files: FileManager;
+    lastStats?: {
+        cpu: number;
+        memoryMb: number;
+    }
 }
 
 export class ServerProcessManager extends EventEmitter {
     private servers = new Map<string, RunningServer>();
     private fileManagers = new Map<string, FileManager>();
     private serverPaths = new Map<string, string>(); // store path for offline servers
+    private statsInterval?: NodeJS.Timer;
 
     constructor() {
         super();
+        this.startStatsLoop();
+    }
+
+    private startStatsLoop() {
+        // emit every 5 seconds
+        setInterval(async () => {
+            for(const [serverId, running] of this.servers.entries()) {
+                try {
+                    const stats = await pidusage(running.process.pid!);
+
+                    const payload = {
+                        id: serverId,
+                        cpu: Number(stats.cpu.toFixed(2)),
+                        memoryMb: Math.round(stats.memory / 1024 / 1024)
+                    }
+
+                    this.emit("stats", payload);
+                } catch (error) {
+                    // Process probably exited
+                }
+            }
+        }, 5000)
     }
 
     /**
@@ -126,9 +154,9 @@ export class ServerProcessManager extends EventEmitter {
 
     listRunning() {
         return Array.from(this.servers.values()).map((s) => ({
-        id: s.server.id,
-        name: s.server.name,
-        pid: s.process.pid,
+            id: s.server.id,
+            name: s.server.name,
+            pid: s.process.pid,
         }));
     }
 }

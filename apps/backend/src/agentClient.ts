@@ -22,7 +22,15 @@ type AgentMessage =
         id: string;
         players: any[];
       };
-    };
+    }
+  | {
+    type: "stats";
+    payload: {
+      id: string,
+      cpu: number,
+      memoryMb: number
+    }
+  }
 
 export const agent = new WebSocket("ws://localhost:9001");
 
@@ -32,9 +40,10 @@ agent.on("open", () => {
 
 agent.on("message", (data) => {
   let msg: AgentMessage;
-
+  
   try {
     msg = JSON.parse(data.toString());
+    console.log(msg);
   } catch {
     console.warn("[agent] Invalid JSON message");
     return;
@@ -44,9 +53,14 @@ agent.on("message", (data) => {
   if (
     msg.type === "log" ||
     msg.type === "status" ||
-    msg.type === "players"
+    msg.type === "players" ||
+    msg.type === "stats"
   ) {
     const serverId = msg.payload.id;
+
+    if(msg.type === "stats") {
+      console.log(msg.payload)
+    }
 
     if (!serverId) {
       console.warn("[agent] Missing server id in payload");
