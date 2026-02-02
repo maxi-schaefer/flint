@@ -10,6 +10,11 @@ const _geistMono = Geist_Mono({ subsets: ["latin"] });
 export async function generateMetadata(): Promise<Metadata> {
   return {
     title: `Flint - Minecraft Server Management`,
+    icons: {
+      icon: '/logo.png', 
+      shortcut: '/logo.png',
+      apple: '/logo.png',
+    },
   };
 }
 
