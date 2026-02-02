@@ -36,12 +36,11 @@ export function LoginForm() {
     return (
         <div className="min-h-screen flex items-center justify-center p-4" style={{ backgroundImage: "url(/login.jpg)"}}>
             <div className="absolute inset-0 bg-black/50"/>
+            
 
             <Card className="w-full max-w-md bg-background/85 backdrop-blur-sm animate-in fade-in zoom-in-95 duration-700">
                 <CardHeader className="text-center flex justify-center border-b mx-4">
-                    <div className="flex h-13 w-13 items-center justify-center rounded-xl bg-primary/10 border border-primary/20">
-                        <Server className="h-5 w-5 text-primary" />
-                    </div>
+                    <img src="/logo.png" alt="logo" className="w-13 h-13" />
                     <div className="flex flex-col items-start">
                         <CardTitle className="text-2xl font-semibold text-foreground">Flint</CardTitle>
                         <CardDescription className="text-muted-foreground">Minecraft Server Management</CardDescription>

@@ -52,9 +52,7 @@ export function Sidebar() {
     <aside className="w-56 border-r bg-card h-screen flex flex-col">
       {/* Header */}
       <div className="px-3 py-3 border-b flex items-center gap-2">
-        <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 border border-primary/20">
-          <ServerIcon className="h-4 w-4 text-primary" />
-        </div>
+        <img src="/logo.png" alt="logo" className="w-9 h-9" />
         <div className="leading-tight">
           <h2 className="text-sm font-semibold">Flint</h2>
           <p className="text-[10px] text-muted-foreground">
