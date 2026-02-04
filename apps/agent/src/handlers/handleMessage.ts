@@ -73,7 +73,8 @@ white-list=${whitelist}
             return {
                 whitelist: pm.getWhitelist(),
                 ops: pm.getOps(),
-                bans: pm.getBans()
+                bans: pm.getBans(),
+                online: pm.getOnlinePlayers(),
             };
             }
 

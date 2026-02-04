@@ -40,7 +40,7 @@ function getStatusBadge(status: Server["status"]) {
 
 
 function DashboardPage() {
-    const { servers } = useServerStore();
+    const { servers, players } = useServerStore();
     const router = useRouter();
 
     const handleStart = async (serverId: string) => {

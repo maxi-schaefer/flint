@@ -87,17 +87,29 @@ export class ServerProcessManager extends EventEmitter {
         const files = this.getFileManager(server.id, server.path);
 
         proc.stdout.on("data", (data) => {
-            const line = data.toString();
-            logs.push(line);
-            this.emit("log", server.id, line);
+            const lines = data.toString().split(/\r?\n/);
+
+            for (const line of lines) {
+                if (!line.trim()) continue;
+
+                logs.push(line);
+                players.handleLogLine(line);
+                this.emit("log", server.id, line);
+            }
         });
 
         proc.stderr.on("data", (data) => {
-            const line = data.toString();
-            logs.push(line);
-            this.emit("log", server.id, line);
-        });
+            const lines = data.toString().split(/\r?\n/);
 
+            for (const line of lines) {
+                if (!line.trim()) continue;
+
+                logs.push(line);
+                players.handleLogLine(line);
+                this.emit("log", server.id, line);
+            }
+        });
+        
         proc.on("exit", (code) => {
             logs.push(`[agent] Server exited with code ${code}`);
             this.emit("status", server.id, "stopped");
@@ -142,11 +154,18 @@ export class ServerProcessManager extends EventEmitter {
     }
 
     getPlayerManager(serverId: string) {
+        const running = this.servers.get(serverId);
+        if (running) {
+            return running.players;
+        }
+
+        // fallback for offline access (files only)
         if (!this.playerManagers.has(serverId)) {
             const serverPath = this.serverPaths.get(serverId);
             if (!serverPath) throw new Error("No server path registered");
             this.playerManagers.set(serverId, new PlayerManager(serverPath));
         }
+
         return this.playerManagers.get(serverId)!;
     }
 

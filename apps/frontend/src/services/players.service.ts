@@ -11,6 +11,7 @@ interface PlayersResponse {
     whitelist: RawPlayer[];
     ops: RawPlayer[];
     bans: RawPlayer[];
+    online: RawPlayer[];
 }
 
 function mapPlayers(res: PlayersResponse): Player[] {
@@ -25,6 +26,7 @@ function mapPlayers(res: PlayersResponse): Player[] {
           isWhitelisted: false,
           isOp: false,
           isBanned: false,
+          isOnline: false,
         });
       }
 
@@ -37,6 +39,10 @@ function mapPlayers(res: PlayersResponse): Player[] {
 
     for (const p of res.ops) {
       ensure(p).isOp = true;
+    }
+
+    for (const p of res.online) {
+      ensure(p).isOnline = true;
     }
 
     for (const p of res.bans) {

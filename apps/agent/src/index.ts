@@ -26,7 +26,7 @@ manager.on("stats", (payload) => {
         type: "stats",
         payload
     });
-})
+});
 
 /**
  * Websocket broadcast function

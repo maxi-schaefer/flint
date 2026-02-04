@@ -33,7 +33,7 @@ export interface Player {
     // playtime: string;
     // lastSeen: string;
 
-    // isOnline: boolean;
+    isOnline: boolean;
     isOp: boolean;
     isWhitelisted: boolean;
     isBanned: boolean;

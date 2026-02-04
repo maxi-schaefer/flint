@@ -12,6 +12,7 @@ import { Card, CardContent } from '../ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import { Badge } from '../ui/badge';
 import { DropdownMenu, DropdownMenuTrigger } from '../ui/dropdown-menu';
+import { cn } from '@/lib/utils';
 
 function Players({ server }: { server: Server }) {
     const [searchQuery, setSearchQuery] = useState("");
@@ -34,11 +35,16 @@ function Players({ server }: { server: Server }) {
     const filteredWhitelisted = whitelistedPlayers.filter((p) => !searchQuery || p.username.toLowerCase().includes(searchQuery.toLowerCase()));
     const filteredBanned = bannedPlayers.filter((p) => !searchQuery || p.username.toLowerCase().includes(searchQuery.toLowerCase()));
 
+    const handleRefresh = () => {
+        getPlayers(server._id).then(setPlayers);
+    }
+
     const PlayerTable = ({ playerList, type }: { playerList: Player[], type: "all" | "whitelist" | "banned"}) => (
         <Table>
             <TableHeader>
                 <TableRow className='border-border hover:bg-transparent'>
                     <TableHead className='text-muted-foreground'>Player</TableHead>
+                    <TableHead className='text-muted-foreground'>Status</TableHead>
                     {type === "banned" && (
                         <>
                             <TableHead className='text-muted-foreground'>Ban Reason</TableHead>
@@ -69,16 +75,6 @@ function Players({ server }: { server: Server }) {
                                                 OP
                                             </Badge>
                                         )}
-                                        {
-                                            player.isBanned && (
-                                                <Badge
-                                                    variant="outline"
-                                                    className="text-xs bg-destructive/10 text-destructive border-destructive/20"
-                                                >   
-                                                    Banned
-                                                </Badge>
-                                            )
-                                        }
                                     </div>
                                     <button className='text-xs text-muted-foreground hover:text-foreground flex items-center gap-1' onClick={() => copyUuid(player.uuid)}>
                                         <span className="truncate max-w-[120px]">{player.uuid}</span>
@@ -86,6 +82,28 @@ function Players({ server }: { server: Server }) {
                                     </button>
                                 </div>
                             </div>
+                        </TableCell>
+                        <TableCell>
+                            {type === "banned" ? (
+                                <Badge
+                                    variant="outline"
+                                    className="text-xs bg-destructive/10 text-destructive border-destructive/20"
+                                >
+                                    Banned
+                                </Badge>
+                        ) : (
+                            <Badge
+                                variant="outline"
+                                className={cn(
+                                    "text-xs",
+                                    player.isOnline
+                                    ? "bg-success/10 text-success border-success/20"
+                                    : "bg-muted text-muted-foreground border-border"
+                                )}
+                            >
+                                {player.isOnline ? "Online" : "Offline"}
+                            </Badge>
+                        )}
                         </TableCell>
                         {
                             type === "banned" && (
@@ -158,6 +176,7 @@ function Players({ server }: { server: Server }) {
                             variant="ghost"
                             size="icon"
                             className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                            onClick={handleRefresh}
                         >
                             <RefreshCw className="h-4 w-4" />
                         </Button>

@@ -15,9 +15,9 @@ export type ServerEvent =
       event: true;
     }
   | {
-      type: "stats",
-      payload: { id: string, cpu: number, memoryMb: number },
-      event: true
+      type: "stats";
+      payload: { id: string; cpu: number; memoryMb: number };
+      event: true;
     }
 
 export function useServerEvents(
