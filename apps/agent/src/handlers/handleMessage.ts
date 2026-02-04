@@ -67,6 +67,61 @@ white-list=${whitelist}
             manager.registerServerPath(msg.payload.id, msg.payload.path);
             return { ok: true }
 
+        case "getPlayers": {
+            const pm = manager.getPlayerManager(msg.payload.id);
+
+            return {
+                whitelist: pm.getWhitelist(),
+                ops: pm.getOps(),
+                bans: pm.getBans()
+            };
+            }
+
+            case "banPlayer": {
+                const { id, uuid, username, reason } = msg.payload;
+                const pm = manager.getPlayerManager(id);
+
+                pm.banPlayer(uuid, username, reason);
+                manager.sendCommand(id, `ban ${username} ${reason}`);
+                return { ok: true };
+            }
+
+            case "unbanPlayer": {
+                const { id, uuid } = msg.payload;
+                const pm = manager.getPlayerManager(id);
+
+                pm.unbanPlayer(uuid);
+                return { ok: true };
+            }
+
+            case "kickPlayer":
+                manager.sendCommand(msg.payload.id, `kick ${msg.payload.username}`);
+                return { ok: true };
+
+            case "addWhitelist": {
+                const pm = manager.getPlayerManager(msg.payload.id);
+                pm.addToWhitelist(msg.payload.uuid, msg.payload.username);
+                return { ok: true };
+            }   
+
+            case "removeWhitelist": {
+            const pm = manager.getPlayerManager(msg.payload.id);
+                pm.removeFromWhitelist(msg.payload.uuid);
+                return { ok: true };
+            }
+
+            case "setOp": {
+                const pm = manager.getPlayerManager(msg.payload.id);
+                pm.setOp(msg.payload.uuid, msg.payload.username);
+                return { ok: true };
+            }
+
+            case "removeOp": {
+                const pm = manager.getPlayerManager(msg.payload.id);
+                pm.removeOp(msg.payload.uuid);
+                return { ok: true };
+            }
+
         default:
             throw new Error(`Unkown command: ${msg.type}`)
     }

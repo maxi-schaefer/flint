@@ -4,14 +4,16 @@ import { EventEmitter } from "stream";
 import { ManagedServer } from "../types";
 import { spawn, ChildProcessWithoutNullStreams } from "child_process";
 import { LogBuffer } from "../logs/LogBuffer";
-import { FileManager } from "../fs/FileManager";
+import { FileManager } from "./FileManager";
 import pidusage from "pidusage";
+import { PlayerManager } from "./PlayerManager";
 
 interface RunningServer {
     process: ChildProcessWithoutNullStreams;
     server: ManagedServer;
     logs: LogBuffer;
     files: FileManager;
+    players: PlayerManager;
     lastStats?: {
         cpu: number;
         memoryMb: number;
@@ -21,6 +23,7 @@ interface RunningServer {
 export class ServerProcessManager extends EventEmitter {
     private servers = new Map<string, RunningServer>();
     private fileManagers = new Map<string, FileManager>();
+    private playerManagers = new Map<string, PlayerManager>();
     private serverPaths = new Map<string, string>(); // store path for offline servers
     private statsInterval?: NodeJS.Timer;
 
@@ -80,27 +83,28 @@ export class ServerProcessManager extends EventEmitter {
         );
 
         const logs = new LogBuffer(500);
+        const players = new PlayerManager(server.path);
         const files = this.getFileManager(server.id, server.path);
 
         proc.stdout.on("data", (data) => {
-        const line = data.toString();
-        logs.push(line);
-        this.emit("log", server.id, line);
+            const line = data.toString();
+            logs.push(line);
+            this.emit("log", server.id, line);
         });
 
         proc.stderr.on("data", (data) => {
-        const line = data.toString();
-        logs.push(line);
-        this.emit("log", server.id, line);
+            const line = data.toString();
+            logs.push(line);
+            this.emit("log", server.id, line);
         });
 
         proc.on("exit", (code) => {
-        logs.push(`[agent] Server exited with code ${code}`);
-        this.emit("status", server.id, "stopped");
-        this.servers.delete(server.id);
+            logs.push(`[agent] Server exited with code ${code}`);
+            this.emit("status", server.id, "stopped");
+            this.servers.delete(server.id);
         });
 
-        this.servers.set(server.id, { process: proc, server, logs, files });
+        this.servers.set(server.id, { process: proc, server, logs, files, players });
         this.registerServerPath(server.id, server.path); // ensure offline file access
         this.emit("status", server.id, "running");
     }
@@ -135,6 +139,15 @@ export class ServerProcessManager extends EventEmitter {
         this.fileManagers.set(serverId, new FileManager(pathToUse));
         }
         return this.fileManagers.get(serverId)!;
+    }
+
+    getPlayerManager(serverId: string) {
+        if (!this.playerManagers.has(serverId)) {
+            const serverPath = this.serverPaths.get(serverId);
+            if (!serverPath) throw new Error("No server path registered");
+            this.playerManagers.set(serverId, new PlayerManager(serverPath));
+        }
+        return this.playerManagers.get(serverId)!;
     }
 
     listFiles(serverId: string, relPath = ".") {

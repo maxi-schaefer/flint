@@ -10,3 +10,18 @@ export interface ManagedServer {
     port: number;
     status: ServerStatus;
 }
+
+export interface Player {
+    id: string;              
+    username: string;
+    uuid: string;
+    joinedAt: string;       
+    playtime: string;       
+    lastSeen: string;
+    isOnline: boolean;
+    isOp: boolean;
+    isWhitelisted: boolean;
+    isBanned: boolean;
+    banReason?: string;
+    bannedAt?: string;
+}

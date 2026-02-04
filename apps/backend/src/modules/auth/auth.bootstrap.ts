@@ -24,6 +24,7 @@ export async function bootstrapAdmin() {
     const passwordHash = await bcrypt.hash(password, SALT_ROUNDS);
 
     await UserModel.create({
+        name: "Admin User",
         email,
         passwordHash,
     });

@@ -1,6 +1,7 @@
 "use client"
 
 import FileBrowser from "@/components/panel/file-browser"
+import Players from "@/components/panel/players"
 import { ServerHeader } from "@/components/panel/server-header"
 import { Terminal } from "@/components/panel/terminal"
 import {
@@ -60,8 +61,8 @@ function ServerPage() {
                 <FileBrowser server={server} />
             </TabsContent>
 
-            <TabsContent value="players" className="p-4 text-muted-foreground">
-                Player list coming next
+            <TabsContent value="players" className="flex-1">
+                <Players server={server} />
             </TabsContent>
 
             <TabsContent value="backups" className="p-4 text-muted-foreground">

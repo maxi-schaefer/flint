@@ -24,3 +24,20 @@ export interface FileItem {
   modified: string
   path: string
 }
+
+export interface Player {
+    username: string;
+    uuid: string;
+
+    // joinedAt: string;
+    // playtime: string;
+    // lastSeen: string;
+
+    // isOnline: boolean;
+    isOp: boolean;
+    isWhitelisted: boolean;
+    isBanned: boolean;
+
+    banReason?: string;
+    bannedAt?: string;
+}

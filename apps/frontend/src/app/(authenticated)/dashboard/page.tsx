@@ -8,7 +8,7 @@ import { useServerStore } from "@/context/ServerStoreContext";
 import { Server } from "@/lib/types"
 import { cn } from "@/lib/utils";
 import { startServer, stopServer } from "@/services/server.service";
-import { Cpu, MoreVertical, Play, RotateCcw, ServerIcon, Shield, ShieldOff, Square, Users } from "lucide-react";
+import { Cpu, MemoryStick, MoreVertical, Play, RotateCcw, ServerIcon, Shield, ShieldOff, Square, Users } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
@@ -212,7 +212,7 @@ function DashboardPage() {
                                         
                                         <div>
                                             <div className="flex items-center gap-1.5 text-muted-foreground mb-1">
-                                                <Users className="h-3.5 w-3.5" />
+                                                <MemoryStick className="h-3.5 w-3.5" />
                                                 <span className="text-xs">Memory</span>
                                             </div>
                                             <p className="font-medium text-foreground">
@@ -222,7 +222,7 @@ function DashboardPage() {
                                         
                                         <div>
                                             <div className="flex items-center gap-1.5 text-muted-foreground mb-1">
-                                                <Users className="h-3.5 w-3.5" />
+                                                <Cpu className="h-3.5 w-3.5" />
                                                 <span className="text-xs">CPU</span>
                                             </div>
                                             <p className="font-medium text-foreground">
